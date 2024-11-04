@@ -3,7 +3,7 @@ import re
 
 nlp_spacy = spacy.load("uk_core_news_sm")
 
-filename = "assets/Омріяний Рим.txt"
+filename = "assets/Хмельниччина.txt"
 with open(filename, encoding="UTF-8", mode="r") as file:
     raw_text = file.read()
 raw_text = re.sub("\n", "", raw_text)
@@ -11,31 +11,43 @@ raw_text = re.sub("\n", "", raw_text)
 doc = nlp_spacy(raw_text)
 sent_list = list(doc.sents)
 locations_ukrainian_contexts = []
-prev = -3
-for i in range(len(sent_list)):
-    sent = sent_list[i]
+prev = -1000
+
+doc = nlp_spacy(raw_text)
+sent_list = list(doc.sents)
+locations_ukrainian_contexts = []
+prev = -1000
+
+for i, sent in enumerate(sent_list):
     for ent in sent.ents:
         if ent.label_ == "LOC":
-            length = len(locations_ukrainian_contexts)
-            if i - prev <= 2:
-                second_pointer = i + 2 if i != length-1 else length-1
-                locations_ukrainian_contexts[length -
-                                             2].extend(sent_list[prev + 1:second_pointer])
+            # Calculate context window indices
+            first_pointer = max(0, i - 1)
+            second_pointer = min(len(sent_list) - 1, i + 2)
+
+            # If the current location is close to the previous one, extend the last context window
+            if i - prev <= 4:
+                print(i, prev)
+                # Convert range to set to avoid duplicates
+                locations_ukrainian_contexts[-1].update(
+                    range(first_pointer, second_pointer + 1))
             else:
-                first_pointer = i-1 if i != 0 else 0
-                second_pointer = i+2 if i != length-1 else length-1
+                # Otherwise, create a new context window with a set
                 locations_ukrainian_contexts.append(
-                    sent_list[first_pointer:second_pointer])
-                prev = i
+                    set(range(first_pointer, second_pointer + 1)))
+
+            prev = i
             break
 
+# Optional: Convert sets back to sorted lists
+locations_ukrainian_contexts = [
+    sorted(context) for context in locations_ukrainian_contexts]
+
+print(locations_ukrainian_contexts)
 with open("output.txt", "w", encoding="UTF-8") as f:
     for loc in locations_ukrainian_contexts:
         text = ""
-        unique = set(loc)
-        i = 0
-        for s in unique:
-            text += f"{i + 1} " + s.text + " "
-            i += 1
+        for sind in loc:
+            text += sent_list[sind].text + " "
         text += "\n\n"
         f.write(text)
