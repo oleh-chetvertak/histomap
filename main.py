@@ -13,11 +13,6 @@ sent_list = list(doc.sents)
 locations_ukrainian_contexts = []
 prev = -1000
 
-doc = nlp_spacy(raw_text)
-sent_list = list(doc.sents)
-locations_ukrainian_contexts = []
-prev = -1000
-
 for i, sent in enumerate(sent_list):
     for ent in sent.ents:
         if ent.label_ == "LOC":
