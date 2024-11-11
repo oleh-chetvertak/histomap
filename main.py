@@ -54,4 +54,5 @@ for cluster in cluster_list:
             html=marker["html"], max_width=250, max_height=500)
         folium.Marker(list(map(float, marker["coords"].split(", "))),
                       popup=popup).add_to(world_map)
+    markers_list = []
 world_map.show_in_browser()
